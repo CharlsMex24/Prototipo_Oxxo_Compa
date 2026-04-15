@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OXXO Compa — Interactive Prototype</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    background: #f3f4f6;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+    padding: 24px 12px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #1f2937;
+  }
+  .stage-header {
+    max-width: 760px;
+    width: 100%;
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .stage-header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.5px;
+  }
+  .stage-header p {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+  .screen-tabs {
+    max-width: 760px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .screen-tabs button {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    color: #374151;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .screen-tabs button:hover { border-color: #E2231A; color: #E2231A; }
+  .screen-tabs button.active {
+    background: #E2231A;
+    color: #fff;
+    border-color: #E2231A;
+  }
+ 
+  /* Phone frame */
+  .phone {
+    width: 380px;
+    height: 780px;
+    background: #111;
+    border-radius: 44px;
+    padding: 14px;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.35), 0 0 0 2px #2a2a2a inset;
+    position: relative;
+  }
+  .phone::before {
+    content: "";
+    position: absolute;
+    top: 22px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #111;
+    border-radius: 16px;
+    z-index: 10;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    background: #fafafa;
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+    display: none;
+    flex-direction: column;
+  }
+  .screen.active { display: flex; }
+ 
+  /* Status bar */
+  .status-bar {
+    height: 44px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 24px 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #111;
+  }
+  .status-bar.dark { color: #fff; }
+ 
+  /* App header */
+  .app-header {
+    padding: 6px 18px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .app-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .app-header .icon-btn {
+    width: 38px; height: 38px;
+    background: #fff;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    cursor: pointer;
+    font-size: 16px;
+  }
+ 
+  /* Body scroll */
+  .body-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 18px 80px;
+  }
+  .body-scroll::-webkit-scrollbar { width: 0; }
+ 
+  /* Bottom nav */
+  .bottom-nav {
+    position: absolute;
+    bottom: 14px; left: 14px; right: 14px;
+    background: #fff;
+    border-radius: 22px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 8px;
+    box-shadow: 0 8px 24px -8px rgba(0,0,0,.18), 0 0 0 1px #f0f0f0;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 0;
+    cursor: pointer;
+    color: #9ca3af;
+    border-radius: 14px;
+    transition: all .15s;
+  }
+  .nav-item .nav-icon {
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    font-size: 18px;
+  }
+  .nav-item .nav-label {
+    font-size: 9.5px;
+    font-weight: 600;
+  }
+  .nav-item.active { color: #E2231A; }
+  .nav-item.active .nav-icon {
+    transform: translateY(-1px);
+  }
+ 
+  /* Cards */
+  .card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 0 0 1px rgba(0,0,0,.02);
+  }
+  .card h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+ 
+  /* SCREEN 1: Splash / Login */
+  .splash {
+    background: linear-gradient(160deg, #E2231A 0%, #B81B14 100%);
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .splash-content { padding: 40px; }
+  .splash-logo {
+    width: 110px; height: 110px;
+    background: #fff;
+    border-radius: 32px;
+    margin: 0 auto 24px;
+    display: grid; place-items: center;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,.3);
+  }
+  .splash-logo .o {
+    background: #E2231A; color: #fff;
+    width: 80px; height: 50px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 1px;
+  }
+  .splash h1 {
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .splash p {
+    font-size: 15px;
+    opacity: .9;
+    margin-bottom: 40px;
+    line-height: 1.5;
+  }
+  .splash .login-btn {
+    background: #fff;
+    color: #E2231A;
+    border: none;
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+  .splash .biometric-btn {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+ 
+  /* SCREEN 2: Home */
+  .greeting {
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  .greeting strong { color: #111827; font-weight: 700; }
+  .shift-card {
+    background: linear-gradient(135deg, #E2231A, #C41E17);
+    color: #fff;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .shift-card::after {
+    content: "";
+    position: absolute;
+    right: -30px; top: -30px;
+    width: 140px; height: 140px;
+    background: rgba(255,213,0,0.15);
+    border-radius: 50%;
+  }
+  .shift-card .label {
+    font-size: 11px; opacity: .85;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    font-weight: 600;
+  }
+  .shift-card .time {
+    font-size: 26px; font-weight: 800;
+    margin: 4px 0 6px;
+    letter-spacing: -0.5px;
+  }
+  .shift-card .role {
+    font-size: 13px; opacity: .9;
+  }
+  .shift-card .pulse {
+    position: absolute;
+    bottom: 16px; right: 16px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .pulse-dot {
+    width: 6px; height: 6px;
+    background: #4ade80;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(74,222,128,0.7);
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.7); }
+    70% { box-shadow: 0 0 0 8px rgba(74,222,128,0); }
+    100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+  }
+ 
+  .quick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .quick-tile {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    cursor: pointer;
+    transition: transform .1s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .quick-tile:active { transform: scale(0.97); }
+  .quick-tile .qicon {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .quick-tile .qtitle {
+    font-size: 13px; font-weight: 700;
+    color: #111827;
+  }
+  .quick-tile .qdesc {
+    font-size: 11px; color: #6b7280;
+    margin-top: 2px;
+  }
+ 
+  .mood-strip {
+    background: #fff;
+    border-radius: 18px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .mood-strip .label {
+    font-size: 13px; font-weight: 700; color: #111827;
+    margin-bottom: 10px;
+  }
+  .mood-options {
+    display: flex; justify-content: space-between;
+  }
+  .mood-emoji {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #f9fafb;
+    display: grid; place-items: center;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all .15s;
+    border: 2px solid transparent;
+  }
+  .mood-emoji:hover { background: #fff5f5; }
+  .mood-emoji.selected {
+    background: #fff5f5;
+    border-color: #E2231A;
+  }
+ 
+  /* SCREEN 3: AI Chat */
+  .chat-header {
+    padding: 6px 18px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .chat-avatar {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, #E2231A, #FFD500);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 16px;
+    box-shadow: 0 4px 12px -4px rgba(226,35,26,0.4);
+  }
+  .chat-info h3 { font-size: 15px; font-weight: 700; }
+  .chat-info p { font-size: 11px; color: #16a34a; font-weight: 600; }
+  .chat-info p::before {
+    content: "●"; margin-right: 4px;
+  }
+  .chat-body {
+    flex: 1; overflow-y: auto;
+    padding: 14px 18px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .chat-bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+  .chat-bubble.bot {
+    background: #fff;
+    color: #111827;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  .chat-bubble.user {
+    background: #E2231A;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-bubble .time {
+    display: block;
+    font-size: 9.5px;
+    opacity: .55;
+    margin-top: 4px;
+  }
+  .chat-suggestion-row {
+    display: flex; gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .chat-chip {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    color: #E2231A;
+    padding: 6px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .chat-input {
+    position: absolute;
+    bottom: 14px; left: 14px; right: 14px;
+    background: #fff;
+    height: 52px;
+    border-radius: 22px;
+    padding: 0 8px 0 18px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 8px 24px -8px rgba(0,0,0,.15), 0 0 0 1px #f0f0f0;
+  }
+  .chat-input input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    background: transparent;
+  }
+  .chat-input .send-btn {
+    width: 38px; height: 38px;
+    background: #E2231A;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: #fff;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+  }
+ 
+  /* SCREEN 4: Tasks */
+  .ai-banner {
+    background: linear-gradient(135deg, #fff5f5, #fefce8);
+    border: 1px solid #fee2e2;
+    border-radius: 16px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .ai-banner .ai-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #E2231A, #FFD500);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    color: #fff;
+    font-weight: 800;
+    flex-shrink: 0;
+    font-size: 13px;
+  }
+  .ai-banner .ai-msg { font-size: 12px; color: #374151; line-height: 1.4; }
+  .ai-banner .ai-msg strong { color: #111827; }
+ 
+  .task-section-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #6b7280;
+    font-weight: 700;
+    margin: 6px 4px 8px;
+  }
+  .task-item {
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .task-check {
+    width: 22px; height: 22px;
+    border: 2px solid #d1d5db;
+    border-radius: 7px;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    transition: all .15s;
+  }
+  .task-item.done .task-check {
+    background: #E2231A;
+    border-color: #E2231A;
+    color: #fff;
+    font-size: 12px;
+  }
+  .task-item.done .task-check::after { content: "✓"; }
+  .task-item.done .task-title {
+    text-decoration: line-through;
+    opacity: .55;
+  }
+  .task-content { flex: 1; }
+  .task-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #111827;
+  }
+  .task-meta {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .priority-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+  .priority-dot.high { background: #ef4444; }
+  .priority-dot.med { background: #f59e0b; }
+  .priority-dot.low { background: #10b981; }
+ 
+  /* SCREEN 5: Training */
+  .training-progress-card {
+    background: linear-gradient(135deg, #FFD500, #fbbf24);
+    color: #111;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .training-progress-card .level {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 700;
+    opacity: .7;
+  }
+  .training-progress-card h3 {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 4px 0 12px;
+    letter-spacing: -0.5px;
+  }
+  .progress-bar {
+    height: 8px;
+    background: rgba(0,0,0,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: #111;
+    border-radius: 4px;
+  }
+  .training-progress-card .xp {
+    font-size: 11px; opacity: .8; font-weight: 600;
+  }
+ 
+  .lesson-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    cursor: pointer;
+  }
+  .lesson-icon {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    display: grid; place-items: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .lesson-icon.bg1 { background: #fee2e2; color: #E2231A; }
+  .lesson-icon.bg2 { background: #fef3c7; color: #d97706; }
+  .lesson-icon.bg3 { background: #dcfce7; color: #16a34a; }
+  .lesson-icon.bg4 { background: #dbeafe; color: #2563eb; }
+  .lesson-content { flex: 1; }
+  .lesson-title { font-size: 14px; font-weight: 700; color: #111827; }
+  .lesson-meta { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  .lesson-action {
+    background: #E2231A;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .lesson-action.done { background: #f3f4f6; color: #16a34a; }
+ 
+  .badge-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 0 8px;
+    margin-bottom: 14px;
+  }
+  .badge {
+    flex-shrink: 0;
+    width: 70px;
+    text-align: center;
+  }
+  .badge-circle {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    margin: 0 auto 4px;
+    display: grid; place-items: center;
+    font-size: 24px;
+    background: linear-gradient(135deg, #FFD500, #f59e0b);
+    color: #fff;
+    box-shadow: 0 4px 10px -2px rgba(245,158,11,0.4);
+  }
+  .badge-circle.locked { background: #e5e7eb; color: #9ca3af; box-shadow: none; }
+  .badge-name { font-size: 10px; font-weight: 600; color: #374151; }
+ 
+  /* SCREEN 6: Wellness */
+  .wellness-hero {
+    background: linear-gradient(135deg, #fef3c7 0%, #fee2e2 100%);
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .wellness-hero .stress-meter {
+    width: 110px; height: 110px;
+    margin: 0 auto 12px;
+    position: relative;
+  }
+  .wellness-hero .stress-meter svg {
+    width: 100%; height: 100%;
+    transform: rotate(-90deg);
+  }
+  .wellness-hero .stress-meter .meter-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .wellness-hero .stress-meter .meter-num {
+    font-size: 28px; font-weight: 800; color: #111;
+    letter-spacing: -1px;
+  }
+  .wellness-hero .stress-meter .meter-label {
+    font-size: 10px; color: #6b7280; font-weight: 600;
+    text-transform: uppercase;
+  }
+  .wellness-hero h3 {
+    font-size: 16px; font-weight: 700; color: #111827;
+  }
+  .wellness-hero p {
+    font-size: 12px; color: #6b7280; margin-top: 4px;
+  }
+ 
+  .suggestion-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border-left: 4px solid #E2231A;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .suggestion-card .stitle {
+    font-size: 13px; font-weight: 700; color: #111827;
+    margin-bottom: 4px;
+  }
+  .suggestion-card .sdesc {
+    font-size: 12px; color: #6b7280; line-height: 1.4;
+  }
+  .suggestion-card .sbtn {
+    background: #fee2e2;
+    color: #E2231A;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    border: none;
+    margin-top: 10px;
+    cursor: pointer;
+  }
+ 
+  /* SCREEN 7: Safety */
+  .safety-screen {
+    background: #1f2937;
+    color: #fff;
+  }
+  .safety-screen .app-header h2 { color: #fff; }
+  .safety-screen .body-scroll { color: #fff; }
+  .safety-status {
+    background: rgba(34,197,94,0.15);
+    border: 1px solid rgba(34,197,94,0.3);
+    color: #4ade80;
+    border-radius: 16px;
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 22px;
+  }
+  .safety-status .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .safety-status .desc { font-size: 12px; opacity: .85; }
+  .panic-btn {
+    width: 220px; height: 220px;
+    margin: 10px auto 24px;
+    background: radial-gradient(circle at 30% 30%, #ef4444, #b91c1c);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: #fff;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 0 0 6px rgba(239,68,68,0.15), 0 0 0 16px rgba(239,68,68,0.08), 0 20px 40px -10px rgba(239,68,68,0.5);
+    border: none;
+    position: relative;
+    animation: glow 2s infinite;
+  }
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 0 6px rgba(239,68,68,0.15), 0 0 0 16px rgba(239,68,68,0.08), 0 20px 40px -10px rgba(239,68,68,0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(239,68,68,0.25), 0 0 0 20px rgba(239,68,68,0.12), 0 20px 50px -10px rgba(239,68,68,0.6); }
+  }
+  .panic-btn .icon { font-size: 56px; margin-bottom: 6px; }
+  .panic-btn .text { font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
+  .panic-btn .sub { font-size: 11px; opacity: .8; margin-top: 4px; font-weight: 500; }
+  .safety-info {
+    background: rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #d1d5db;
+  }
+  .safety-info strong { color: #fff; }
+ 
+  /* SCREEN 8: Shift Swap */
+  .swap-tabs {
+    display: flex;
+    background: #f3f4f6;
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 14px;
+  }
+  .swap-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+  }
+  .swap-tab.active {
+    background: #fff;
+    color: #111827;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  }
+  .swap-listing {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .swap-listing-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .swap-listing .person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .swap-listing .avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #E2231A;
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .swap-listing .pname { font-size: 13px; font-weight: 700; color: #111827; }
+  .swap-listing .pstore { font-size: 11px; color: #6b7280; }
+  .swap-listing .match-badge {
+    background: #dcfce7;
+    color: #16a34a;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .swap-listing .shift-info {
+    background: #f9fafb;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #374151;
+    margin-bottom: 10px;
+  }
+  .swap-listing .shift-info strong { color: #111827; }
+  .swap-listing .swap-btn {
+    width: 100%;
+    background: #E2231A;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+ 
+  /* SCREEN 9: Recognition */
+  .give-kudos-btn {
+    background: linear-gradient(135deg, #E2231A, #FFD500);
+    color: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    width: 100%;
+    border: none;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .kudos-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .kudos-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .kudos-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+  }
+  .kudos-from { font-size: 12.5px; color: #111827; line-height: 1.3; }
+  .kudos-from strong { font-weight: 700; }
+  .kudos-time { font-size: 10.5px; color: #6b7280; }
+  .kudos-msg {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.5;
+    background: #fafafa;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border-left: 3px solid #FFD500;
+  }
+  .kudos-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: #6b7280;
+  }
+  .kudos-actions span { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+ 
+  /* SCREEN 10: Performance */
+  .perf-hero {
+    background: linear-gradient(135deg, #1f2937, #374151);
+    color: #fff;
+    border-radius: 20px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+  .perf-score-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .perf-circle {
+    width: 76px; height: 76px;
+    border-radius: 50%;
+    background: conic-gradient(#FFD500 0deg 306deg, rgba(255,255,255,0.15) 306deg 360deg);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .perf-circle::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    background: #1f2937;
+    border-radius: 50%;
+  }
+  .perf-circle .num {
+    position: relative;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .perf-info .label { font-size: 11px; opacity: .7; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+  .perf-info .grade { font-size: 18px; font-weight: 700; margin-top: 2px; }
+  .perf-info .desc { font-size: 11.5px; opacity: .85; margin-top: 2px; }
+ 
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-tile {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .stat-tile .stat-num {
+    font-size: 22px;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.5px;
+  }
+  .stat-tile .stat-label {
+    font-size: 11px;
+    color: #6b7280;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .stat-tile .stat-trend {
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  .stat-tile .stat-trend.up { color: #16a34a; }
+  .stat-tile .stat-trend.down { color: #ef4444; }
+ 
+  .insight-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .insight-card h3 { font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 10px; }
+  .insight-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 12px;
+  }
+  .insight-row:last-child { border-bottom: none; }
+  .insight-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: #E2231A;
+    display: grid; place-items: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .insight-text { flex: 1; color: #374151; }
+  .insight-text strong { color: #111827; }
+</style>
+</head>
+<body>
+ 
+<div class="stage-header">
+  <h1>OXXO Compa — Interactive Prototype</h1>
+  <p>AI-powered companion app for OXXO store employees · Tap a screen below to navigate</p>
+</div>
+ 
+<div class="screen-tabs" id="tabs">
+  <button data-screen="splash">1. Login</button>
+  <button data-screen="home" class="active">2. Home</button>
+  <button data-screen="chat">3. Compa AI</button>
+  <button data-screen="tasks">4. Tasks</button>
+  <button data-screen="training">5. Training</button>
+  <button data-screen="wellness">6. Wellness</button>
+  <button data-screen="safety">7. Safety</button>
+  <button data-screen="swap">8. Shift Swap</button>
+  <button data-screen="kudos">9. Recognition</button>
+  <button data-screen="perf">10. Performance</button>
+</div>
+ 
+<div class="phone">
+ 
+  <!-- SCREEN 1: SPLASH -->
+  <div class="screen splash" data-screen="splash">
+    <div class="splash-content">
+      <div class="splash-logo">
+        <div class="o">OXXO</div>
+      </div>
+      <h1>Compa</h1>
+      <p>Your AI partner on every shift.<br>Onboarding, training, wellness and recognition — in one place.</p>
+      <button class="login-btn" onclick="show('home')">Sign in with employee number</button>
+      <button class="biometric-btn">🔒 Use biometric login</button>
+    </div>
+  </div>
+ 
+  <!-- SCREEN 2: HOME -->
+  <div class="screen active" data-screen="home">
+    <div class="status-bar"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="app-header">
+      <div>
+        <div class="greeting">Buenos días,</div>
+        <h2>Carlos 👋</h2>
+      </div>
+      <div class="icon-btn" onclick="show('chat')">💬</div>
+    </div>
+ 
+    <div class="body-scroll">
+ 
+      <div class="shift-card">
+        <div class="label">Today's shift</div>
+        <div class="time">07:00 — 15:00</div>
+        <div class="role">Cashier · Tienda Cumbres 4022</div>
+        <div class="pulse"><span class="pulse-dot"></span> ON SHIFT</div>
+      </div>
+ 
+      <div class="mood-strip">
+        <div class="label">How are you feeling right now?</div>
+        <div class="mood-options">
+          <div class="mood-emoji">😄</div>
+          <div class="mood-emoji selected">🙂</div>
+          <div class="mood-emoji">😐</div>
+          <div class="mood-emoji">😟</div>
+          <div class="mood-emoji">😫</div>
+        </div>
+      </div>
+ 
+      <div class="quick-grid">
+        <div class="quick-tile" onclick="show('tasks')">
+          <div class="qicon" style="background:#fee2e2; color:#E2231A;">✓</div>
+          <div class="qtitle">Today's tasks</div>
+          <div class="qdesc">3 of 8 done</div>
+        </div>
+        <div class="quick-tile" onclick="show('training')">
+          <div class="qicon" style="background:#fef3c7; color:#d97706;">🎓</div>
+          <div class="qtitle">Continue learning</div>
+          <div class="qdesc">5 min lesson</div>
+        </div>
+        <div class="quick-tile" onclick="show('kudos')">
+          <div class="qicon" style="background:#dcfce7; color:#16a34a;">⭐</div>
+          <div class="qtitle">Recognition</div>
+          <div class="qdesc">2 new kudos!</div>
+        </div>
+        <div class="quick-tile" onclick="show('safety')">
+          <div class="qicon" style="background:#1f2937; color:#fff;">🛡</div>
+          <div class="qtitle">Safety</div>
+          <div class="qdesc">Panic button</div>
+        </div>
+      </div>
+ 
+      <div class="card">
+        <h3>AI Insight for today</h3>
+        <div style="font-size:13px; color:#374151; line-height:1.5;">
+          Based on the last 4 weeks, expect peak traffic between <strong>13:00 and 14:00</strong>. Restock cold drinks before 12:30 to stay ahead of the rush.
+        </div>
+      </div>
+ 
+    </div>
+ 
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="show('home')"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item" onclick="show('tasks')"><div class="nav-icon">📋</div><div class="nav-label">Tasks</div></div>
+      <div class="nav-item" onclick="show('chat')"><div class="nav-icon">🤖</div><div class="nav-label">Compa</div></div>
+      <div class="nav-item" onclick="show('training')"><div class="nav-icon">🎓</div><div class="nav-label">Learn</div></div>
+      <div class="nav-item" onclick="show('perf')"><div class="nav-icon">📊</div><div class="nav-label">Me</div></div>
+    </div>
+  </div>
+ 
+  <!-- SCREEN 3: CHAT -->
+  <div class="screen" data-screen="chat">
+    <div class="status-bar"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="chat-header">
+      <div class="icon-btn" onclick="show('home')" style="width:32px;height:32px;font-size:14px;">←</div>
+      <div class="chat-avatar">C</div>
+      <div class="chat-info">
+        <h3>Compa AI</h3>
+        <p>Always available · responds instantly</p>
+      </div>
+    </div>
+    <div class="chat-body">
+      <div class="chat-bubble bot">
+        Hi Carlos! I'm Compa, your shift partner. What can I help you with today?
+        <span class="time">9:38 AM</span>
+      </div>
+      <div class="chat-bubble user">
+        How do I process a Spin recharge if the customer's QR doesn't scan?
+        <span class="time">9:39 AM</span>
+      </div>
+      <div class="chat-bubble bot">
+        No problem. You can do a manual recharge:<br><br>
+        1. Open POS → "Spin" → "Recharge"<br>
+        2. Tap "Manual entry"<br>
+        3. Enter the customer's phone number<br>
+        4. Confirm the amount<br>
+        5. Print the receipt and give it to the customer<br><br>
+        If it still fails, this usually means the SIM is suspended. Want me to flag a ticket to support?
+        <span class="time">9:39 AM</span>
+      </div>
+      <div class="chat-bubble user">
+        No, that worked. Thanks!
+        <span class="time">9:40 AM</span>
+      </div>
+      <div class="chat-bubble bot">
+        Glad it helped 💪 I noted this is the 3rd Spin question this week — I'll suggest it as a microlesson tonight.
+        <div class="chat-suggestion-row">
+          <div class="chat-chip">View procedure</div>
+          <div class="chat-chip">Report issue</div>
+        </div>
+        <span class="time">9:40 AM</span>
+      </div>
+    </div>
+    <div class="chat-input">
+      <input placeholder="Ask Compa anything..." />
+      <button class="send-btn">→</button>
+    </div>
+  </div>
+ 
+  <!-- SCREEN 4: TASKS -->
+  <div class="screen" data-screen="tasks">
+    <div class="status-bar"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="app-header">
+      <div>
+        <div class="greeting">Wednesday, Apr 15</div>
+        <h2>Today's Tasks</h2>
+      </div>
+      <div class="icon-btn">⚙️</div>
+    </div>
+    <div class="body-scroll">
+ 
+      <div class="ai-banner">
+        <div class="ai-icon">C</div>
+        <div class="ai-msg">
+          <strong>Compa AI:</strong> I reordered your tasks based on today's predicted customer flow. The cold drink restock should happen <strong>before 12:30</strong> to beat the lunch rush.
+        </div>
+      </div>
+ 
+      <div class="task-section-label">Priority — start now</div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-content">
+          <div class="task-title">Restock cold beverages</div>
+          <div class="task-meta"><span class="priority-dot high"></span> High · Smart shelf alert · 5 SKUs low</div>
+        </div>
+      </div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-content">
+          <div class="task-title">Check expiration on bread shelf</div>
+          <div class="task-meta"><span class="priority-dot high"></span> High · Daily routine · est. 6 min</div>
+        </div>
+      </div>
+ 
+      <div class="task-section-label">Done today</div>
+      <div class="task-item done">
+        <div class="task-check"></div>
+        <div class="task-content">
+          <div class="task-title">Open shift checklist</div>
+          <div class="task-meta">Completed at 7:08 AM</div>
+        </div>
+      </div>
+      <div class="task-item done">
+        <div class="task-check"></div>
+        <div class="task-content">
+          <div class="task-title">Coffee station cleaning</div>
+          <div class="task-meta">Completed at 8:22 AM</div>
+        </div>
+      </div>
+      <div class="task-item done">
+        <div class="task-check"></div>
+        <div class="task-content">
+          <div class="task-title">Update price tags — promo aisle 3</div>
+          <div class="task-meta">Completed at 8:40 AM</div>
+        </div>
+      </div>
+ 
+      <div class="task-section-label">Later today</div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-content">
+          <div class="task-title">Mop entrance floor (after 14:00)</div>
+          <div class="task-meta"><span class="priority-dot med"></span> Medium · est. 8 min</div>
+        </div>
+      </div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-content">
+          <div class="task-title">Cash drop to safe</div>
+          <div class="task-meta"><span class="priority-dot med"></span> Medium · scheduled 14:30</div>
+        </div>
+      </div>
+ 
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="show('home')"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item active"><div class="nav-icon">📋</div><div class="nav-label">Tasks</div></div>
+      <div class="nav-item" onclick="show('chat')"><div class="nav-icon">🤖</div><div class="nav-label">Compa</div></div>
+      <div class="nav-item" onclick="show('training')"><div class="nav-icon">🎓</div><div class="nav-label">Learn</div></div>
+      <div class="nav-item" onclick="show('perf')"><div class="nav-icon">📊</div><div class="nav-label">Me</div></div>
+    </div>
+  </div>
+ 
+  <!-- SCREEN 5: TRAINING -->
+  <div class="screen" data-screen="training">
+    <div class="status-bar"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="app-header">
+      <div>
+        <div class="greeting">Keep learning · 5 min/day</div>
+        <h2>Training</h2>
+      </div>
+      <div class="icon-btn">🏆</div>
+    </div>
+    <div class="body-scroll">
+ 
+      <div class="training-progress-card">
+        <div class="level">Level 7 · Tienda Pro</div>
+        <h3>1,420 XP</h3>
+        <div class="progress-bar"><div class="progress-bar-fill" style="width:68%"></div></div>
+        <div class="xp">580 XP to Level 8 · Top 12% in your region</div>
+      </div>
+ 
+      <div class="task-section-label">Today's lessons</div>
+ 
+      <div class="lesson-card" onclick="alert('Opening lesson...')">
+        <div class="lesson-icon bg1">💳</div>
+        <div class="lesson-content">
+          <div class="lesson-title">Spin troubleshooting</div>
+          <div class="lesson-meta">Microlesson · 4 min · +50 XP</div>
+        </div>
+        <div class="lesson-action">Start</div>
+      </div>
+ 
+      <div class="lesson-card">
+        <div class="lesson-icon bg2">🚨</div>
+        <div class="lesson-content">
+          <div class="lesson-title">Robbery protocol — what to do</div>
+          <div class="lesson-meta">Required · 7 min · +80 XP</div>
+        </div>
+        <div class="lesson-action">Start</div>
+      </div>
+ 
+      <div class="lesson-card">
+        <div class="lesson-icon bg3">🥤</div>
+        <div class="lesson-content">
+          <div class="lesson-title">Stock rotation FIFO quiz</div>
+          <div class="lesson-meta">Quick quiz · 2 min · +30 XP</div>
+        </div>
+        <div class="lesson-action done">✓ Done</div>
+      </div>
+ 
+      <div class="lesson-card">
+        <div class="lesson-icon bg4">💬</div>
+        <div class="lesson-content">
+          <div class="lesson-title">Difficult customer scenarios</div>
+          <div class="lesson-meta">Roleplay with AI · 6 min</div>
+        </div>
+        <div class="lesson-action">Start</div>
+      </div>
+ 
+      <div class="task-section-label">Your badges</div>
+      <div class="badge-row">
+        <div class="badge"><div class="badge-circle">⚡</div><div class="badge-name">Fast Cashier</div></div>
+        <div class="badge"><div class="badge-circle">🎯</div><div class="badge-name">First Week</div></div>
+        <div class="badge"><div class="badge-circle">📚</div><div class="badge-name">10 Lessons</div></div>
+        <div class="badge"><div class="badge-circle locked">🔒</div><div class="badge-name">Streak 30</div></div>
+        <div class="badge"><div class="badge-circle locked">🔒</div><div class="badge-name">Mentor</div></div>
+      </div>
+ 
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="show('home')"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item" onclick="show('tasks')"><div class="nav-icon">📋</div><div class="nav-label">Tasks</div></div>
+      <div class="nav-item" onclick="show('chat')"><div class="nav-icon">🤖</div><div class="nav-label">Compa</div></div>
+      <div class="nav-item active"><div class="nav-icon">🎓</div><div class="nav-label">Learn</div></div>
+      <div class="nav-item" onclick="show('perf')"><div class="nav-icon">📊</div><div class="nav-label">Me</div></div>
+    </div>
+  </div>
+ 
+  <!-- SCREEN 6: WELLNESS -->
+  <div class="screen" data-screen="wellness">
+    <div class="status-bar"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="app-header">
+      <div>
+        <div class="greeting">Take care of yourself</div>
+        <h2>Wellness</h2>
+      </div>
+      <div class="icon-btn" onclick="show('home')">←</div>
+    </div>
+    <div class="body-scroll">
+ 
+      <div class="wellness-hero">
+        <div class="stress-meter">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.08)" stroke-width="8" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#f59e0b" stroke-width="8" stroke-linecap="round"
+                    stroke-dasharray="263" stroke-dashoffset="158" />
+          </svg>
+          <div class="meter-text">
+            <div class="meter-num">40%</div>
+            <div class="meter-label">Stress</div>
+          </div>
+        </div>
+        <h3>You're doing fine</h3>
+        <p>Slight fatigue detected. A short break can help.</p>
+      </div>
+ 
+      <div class="task-section-label">Suggested for you</div>
+ 
+      <div class="suggestion-card">
+        <div class="stitle">☕ Take your 15-min break now</div>
+        <div class="sdesc">Your shift hits 4 hours at 11:00. Customer flow is currently low — perfect window.</div>
+        <button class="sbtn">Schedule break</button>
+      </div>
+ 
+      <div class="suggestion-card">
+        <div class="stitle">💧 You haven't logged hydration today</div>
+        <div class="sdesc">Quick reminder: drink water during your next break.</div>
+        <button class="sbtn">Mark as done</button>
+      </div>
+ 
+      <div class="suggestion-card">
+        <div class="stitle">🧘 Try a 2-minute breathing exercise</div>
+        <div class="sdesc">Reduces stress before peak hour. Audio-guided, just press play.</div>
+        <button class="sbtn">Start now</button>
+      </div>
+ 
+      <div class="card">
+        <h3>This week's mood trend</h3>
+        <div style="display:flex; gap:6px; align-items:flex-end; height:80px; padding:6px 0;">
+          <div style="flex:1; background:#fef3c7; height:60%; border-radius:6px;"></div>
+          <div style="flex:1; background:#fef3c7; height:70%; border-radius:6px;"></div>
+          <div style="flex:1; background:#dcfce7; height:85%; border-radius:6px;"></div>
+          <div style="flex:1; background:#fee2e2; height:40%; border-radius:6px;"></div>
+          <div style="flex:1; background:#dcfce7; height:90%; border-radius:6px;"></div>
+          <div style="flex:1; background:#dcfce7; height:80%; border-radius:6px;"></div>
+          <div style="flex:1; background:#fef3c7; height:65%; border-radius:6px;"></div>
+        </div>
+        <div style="display:flex; gap:6px; font-size:10px; color:#6b7280; padding-top:6px;">
+          <div style="flex:1; text-align:center;">M</div>
+          <div style="flex:1; text-align:center;">T</div>
+          <div style="flex:1; text-align:center;">W</div>
+          <div style="flex:1; text-align:center;">T</div>
+          <div style="flex:1; text-align:center;">F</div>
+          <div style="flex:1; text-align:center;">S</div>
+          <div style="flex:1; text-align:center; font-weight:700; color:#E2231A;">S</div>
+        </div>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <!-- SCREEN 7: SAFETY -->
+  <div class="screen safety-screen" data-screen="safety">
+    <div class="status-bar dark"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="app-header">
+      <div>
+        <div class="greeting" style="color:#9ca3af;">Always at hand</div>
+        <h2>Safety</h2>
+      </div>
+      <div class="icon-btn" onclick="show('home')" style="background:rgba(255,255,255,0.1); color:#fff;">←</div>
+    </div>
+    <div class="body-scroll">
+ 
+      <div class="safety-status">
+        <div class="label">● All systems active</div>
+        <div class="desc">Store cameras, silent alarm, and supervisor channel are online.</div>
+      </div>
+ 
+      <button class="panic-btn" onclick="alert('Hold for 3 seconds to alert security and supervisor.')">
+        <div class="icon">🆘</div>
+        <div class="text">PANIC BUTTON</div>
+        <div class="sub">Hold to activate · silent alert</div>
+      </button>
+ 
+      <div class="safety-info">
+        <strong>What happens when you press:</strong><br>
+        • Silent alert sent to supervisor & security<br>
+        • Camera live-feed flagged for review<br>
+        • Police pre-notification triggered<br>
+        • Your location shared automatically<br><br>
+        <strong>You stay safe — never confront. Always cooperate.</strong>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <!-- SCREEN 8: SHIFT SWAP -->
+  <div class="screen" data-screen="swap">
+    <div class="status-bar"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="app-header">
+      <div>
+        <div class="greeting">Trade or pick up shifts</div>
+        <h2>Shift Swap</h2>
+      </div>
+      <div class="icon-btn" onclick="show('home')">←</div>
+    </div>
+    <div class="body-scroll">
+ 
+      <div class="swap-tabs">
+        <div class="swap-tab active">Available</div>
+        <div class="swap-tab">My requests</div>
+        <div class="swap-tab">History</div>
+      </div>
+ 
+      <div class="ai-banner">
+        <div class="ai-icon">C</div>
+        <div class="ai-msg">
+          <strong>Compa AI:</strong> Found 3 shifts that match your availability this week.
+        </div>
+      </div>
+ 
+      <div class="swap-listing">
+        <div class="swap-listing-top">
+          <div class="person">
+            <div class="avatar">MA</div>
+            <div>
+              <div class="pname">María A.</div>
+              <div class="pstore">Tienda Cumbres 4022</div>
+            </div>
+          </div>
+          <div class="match-badge">98% MATCH</div>
+        </div>
+        <div class="shift-info">
+          <strong>Friday Apr 17</strong> · 15:00 — 23:00<br>
+          Cashier · 8 hour shift · evening
+        </div>
+        <button class="swap-btn">Pick up shift</button>
+      </div>
+ 
+      <div class="swap-listing">
+        <div class="swap-listing-top">
+          <div class="person">
+            <div class="avatar" style="background:#dbeafe; color:#2563eb;">JR</div>
+            <div>
+              <div class="pname">Jorge R.</div>
+              <div class="pstore">Tienda Valle Alto</div>
+            </div>
+          </div>
+          <div class="match-badge" style="background:#fef3c7; color:#d97706;">82% MATCH</div>
+        </div>
+        <div class="shift-info">
+          <strong>Sunday Apr 19</strong> · 07:00 — 15:00<br>
+          Cashier · 8 hour shift · morning
+        </div>
+        <button class="swap-btn">Pick up shift</button>
+      </div>
+ 
+      <div class="swap-listing">
+        <div class="swap-listing-top">
+          <div class="person">
+            <div class="avatar" style="background:#dcfce7; color:#16a34a;">LV</div>
+            <div>
+              <div class="pname">Lupita V.</div>
+              <div class="pstore">Tienda Cumbres 4022</div>
+            </div>
+          </div>
+          <div class="match-badge" style="background:#fef3c7; color:#d97706;">75% MATCH</div>
+        </div>
+        <div class="shift-info">
+          <strong>Saturday Apr 18</strong> · 23:00 — 07:00<br>
+          Night shift · +20% pay
+        </div>
+        <button class="swap-btn">Pick up shift</button>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <!-- SCREEN 9: KUDOS -->
+  <div class="screen" data-screen="kudos">
+    <div class="status-bar"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="app-header">
+      <div>
+        <div class="greeting">2 new this week 🎉</div>
+        <h2>Recognition</h2>
+      </div>
+      <div class="icon-btn" onclick="show('home')">←</div>
+    </div>
+    <div class="body-scroll">
+ 
+      <button class="give-kudos-btn">⭐ Give kudos to a teammate</button>
+ 
+      <div class="task-section-label">Recent kudos for you</div>
+ 
+      <div class="kudos-card">
+        <div class="kudos-header">
+          <div class="kudos-avatar" style="background:#E2231A;">RG</div>
+          <div>
+            <div class="kudos-from"><strong>Roberto G.</strong> — Store Manager</div>
+            <div class="kudos-time">2 hours ago · 🌟 Customer Service</div>
+          </div>
+        </div>
+        <div class="kudos-msg">
+          "Carlos handled the long line during yesterday's lunch rush like a pro. No one walked away. Solid teamwork."
+        </div>
+        <div class="kudos-actions">
+          <span>❤️ 12</span><span>💬 Reply</span>
+        </div>
+      </div>
+ 
+      <div class="kudos-card">
+        <div class="kudos-header">
+          <div class="kudos-avatar" style="background:#2563eb;">MA</div>
+          <div>
+            <div class="kudos-from"><strong>María A.</strong> — Cashier, same store</div>
+            <div class="kudos-time">Yesterday · 🤝 Teamwork</div>
+          </div>
+        </div>
+        <div class="kudos-msg">
+          "Thanks for covering my break, even though it ran long. You're the best compa 💪"
+        </div>
+        <div class="kudos-actions">
+          <span>❤️ 4</span><span>💬 Reply</span>
+        </div>
+      </div>
+ 
+      <div class="task-section-label">Earn your weekly star</div>
+      <div class="card" style="background: linear-gradient(135deg, #fef3c7, #fff);">
+        <div style="font-size:13px; font-weight:700; color:#111;">3 more kudos = $200 MXN bonus</div>
+        <div style="font-size:11px; color:#6b7280; margin:6px 0 10px;">Top 5 employees of the month at your store earn extra rewards.</div>
+        <div class="progress-bar" style="background:rgba(0,0,0,0.08); margin-bottom:0;">
+          <div class="progress-bar-fill" style="width:40%; background:#E2231A;"></div>
+        </div>
+      </div>
+ 
+    </div>
+  </div>
+ 
+  <!-- SCREEN 10: PERFORMANCE -->
+  <div class="screen" data-screen="perf">
+    <div class="status-bar"><span>9:41</span><span>● ● ● 100%</span></div>
+    <div class="app-header">
+      <div>
+        <div class="greeting">April · 15 days in</div>
+        <h2>My Performance</h2>
+      </div>
+      <div class="icon-btn">📅</div>
+    </div>
+    <div class="body-scroll">
+ 
+      <div class="perf-hero">
+        <div class="perf-score-row">
+          <div class="perf-circle"><div class="num">85</div></div>
+          <div class="perf-info">
+            <div class="label">Overall score</div>
+            <div class="grade">Strong performance</div>
+            <div class="desc">Top 18% of your region · transparent metrics</div>
+          </div>
+        </div>
+      </div>
+ 
+      <div class="stat-grid">
+        <div class="stat-tile">
+          <div class="stat-num">98%</div>
+          <div class="stat-label">Tasks completed</div>
+          <div class="stat-trend up">↑ 4% vs March</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-num">42s</div>
+          <div class="stat-label">Avg cashier time</div>
+          <div class="stat-trend up">↑ Faster than 73% peers</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-num">12</div>
+          <div class="stat-label">Lessons completed</div>
+          <div class="stat-trend up">↑ 3 above target</div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-num">14</div>
+          <div class="stat-label">Kudos this month</div>
+          <div class="stat-trend up">↑ Personal record</div>
+        </div>
+      </div>
+ 
+      <div class="insight-card">
+        <h3>What's working & what to improve</h3>
+        <div class="insight-row">
+          <div class="insight-icon" style="background:#dcfce7; color:#16a34a;">↑</div>
+          <div class="insight-text"><strong>Stock rotation:</strong> Zero expired items this month — keep it up.</div>
+        </div>
+        <div class="insight-row">
+          <div class="insight-icon" style="background:#dcfce7; color:#16a34a;">↑</div>
+          <div class="insight-text"><strong>Customer flow:</strong> Always on time, even on Sundays.</div>
+        </div>
+        <div class="insight-row">
+          <div class="insight-icon" style="background:#fef3c7; color:#d97706;">!</div>
+          <div class="insight-text"><strong>Cleaning logs:</strong> 2 missed entries last week. Try the voice log feature.</div>
+        </div>
+        <div class="insight-row">
+          <div class="insight-icon" style="background:#fee2e2; color:#E2231A;">★</div>
+          <div class="insight-text"><strong>Promotion alert:</strong> You're 3 months from being eligible for Senior Cashier.</div>
+        </div>
+      </div>
+ 
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="show('home')"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+      <div class="nav-item" onclick="show('tasks')"><div class="nav-icon">📋</div><div class="nav-label">Tasks</div></div>
+      <div class="nav-item" onclick="show('chat')"><div class="nav-icon">🤖</div><div class="nav-label">Compa</div></div>
+      <div class="nav-item" onclick="show('training')"><div class="nav-icon">🎓</div><div class="nav-label">Learn</div></div>
+      <div class="nav-item active"><div class="nav-icon">📊</div><div class="nav-label">Me</div></div>
+    </div>
+  </div>
+ 
+</div>
+ 
+<script>
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll(`.screen[data-screen="${id}"]`).forEach(s => s.classList.add('active'));
+    document.querySelectorAll('#tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll(`#tabs button[data-screen="${id}"]`).forEach(b => b.classList.add('active'));
+  }
+  document.querySelectorAll('#tabs button').forEach(b => {
+    b.addEventListener('click', () => show(b.dataset.screen));
+  });
+  // mood selector
+  document.querySelectorAll('.mood-emoji').forEach(e => {
+    e.addEventListener('click', () => {
+      document.querySelectorAll('.mood-emoji').forEach(x => x.classList.remove('selected'));
+      e.classList.add('selected');
+    });
+  });
+  // task toggle
+  document.querySelectorAll('.task-item').forEach(t => {
+    t.addEventListener('click', () => t.classList.toggle('done'));
+  });
+  // swap tabs
+  document.querySelectorAll('.swap-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.swap-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
