@@ -1,3 +1,5 @@
+<img width="1572" height="1438" alt="image" src="https://github.com/user-attachments/assets/a72df025-1bf5-46d0-8f35-eadb3eeac2bf" />
+
 # OXXO Compa — Prototype
 
 > **An AI-powered companion app for OXXO store employees.**  
